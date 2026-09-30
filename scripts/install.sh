@@ -24,11 +24,22 @@ sed -e "s/{{AGENT_NAME}}/$NAME/g" \
     "$SRC/CLAUDE.md.template" > "$CLAUDE_MD"
 
 
+# memory 目录
 mkdir -p "$HOME/memory"/{facts,references,sessions,tasks,feedback,decisions,projects,misc}
 cp -n "$SRC/bin/recall" "$HOME/bin/recall" 2>/dev/null || cp "$SRC/bin/recall" "$HOME/bin/recall"
 cp -n "$SRC/bin/remember" "$HOME/bin/remember" 2>/dev/null || cp "$SRC/bin/remember" "$HOME/bin/remember"
 chmod +x "$HOME/bin/recall" "$HOME/bin/remember"
-echo "✅ memory 目录 + bin 工具就位"
+
+# 7stars 规则/知识目录骨架（decisions/references/backups + 模板 + OPS）
+RULES_HOME="$HOME/$RULES_DIR"
+mkdir -p "$RULES_HOME"/{decisions,references,backups,scripts}
+cp -n "$SRC/7stars/decisions/TEMPLATE.md" "$RULES_HOME/decisions/TEMPLATE.md"
+cp -n "$SRC/7stars/references/TEMPLATE.md" "$RULES_HOME/references/TEMPLATE.md"
+cp -n "$SRC/7stars/backups/README.md" "$RULES_HOME/backups/README.md"
+cp -n "$SRC/OPS.md" "$RULES_HOME/OPS.md"
+cp -n "$SRC/scripts/cron-manage.sh" "$RULES_HOME/scripts/cron-manage.sh"
+chmod +x "$RULES_HOME/scripts/cron-manage.sh"
+echo "✅ memory + $RULES_HOME（decisions/references/backups/OPS/cron-manage）就位"
 echo
 echo "剩余占位符："
 rem=$(grep -oE '\{\{[A-Z_]+\}\}' "$CLAUDE_MD" | sort -u)

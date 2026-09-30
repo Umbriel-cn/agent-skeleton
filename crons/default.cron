@@ -1,0 +1,12 @@
+# agent-skeleton 通用 cron（install.sh 自动装，走 cron-manage.sh 登记）
+# 格式：<desc> <cron_expr> <cmd>，install 时逐行解析
+# 记忆归档：每月 1 号 03:00
+记忆归档|0 3 1 * *|bash $HOME/bin/memory-cleanup.sh >> $HOME/7stars/backups/cron-memory-cleanup.log 2>&1
+# 每日备份：每天 00:00
+每日备份|0 0 * * *|bash $HOME/7stars/scripts/daily-backup.sh >> $HOME/7stars/backups/cron-daily-backup.log 2>&1
+# 安全巡检：每天 00:15
+安全巡检|15 0 * * *|bash $HOME/7stars/scripts/security-check.sh --quiet >> $HOME/7stars/backups/cron-security-check.log 2>&1
+# 记忆索引：每天 00:45
+记忆索引|45 0 * * *|bash $HOME/7stars/scripts/memory-index-build.sh >> $HOME/7stars/backups/cron-memory-index.log 2>&1
+# 会话自检：每天 09:00（一次性自检，跑过就忘）
+会话自检|0 9 * * *|bash $HOME/7stars/scripts/startup-check.sh >> $HOME/7stars/backups/cron-startup-check.log 2>&1

@@ -34,3 +34,4 @@ cron 本体系统自带，不装额外东西。`crons/README.md` 列默认建议
 
 ## 安全
 公开仓库，零私有内容：发布前跑发布方提供的 grep 硬校验（人名/账号/内网地址/会话 key 全 0 命中）。
+skeleton-sync dry test 22:02

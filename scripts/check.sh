@@ -32,6 +32,7 @@ for d in decisions references backups scripts; do
 done
 [ -f "$RH/OPS.md" ] && ok "OPS.md（定制说明）" || warn "OPS.md 缺 — 填首检三问的答案和本机参数"
 [ -x "$RH/scripts/cron-manage.sh" ] && ok "cron-manage.sh（改 crontab 必备份+登记）" || warn "cron-manage.sh 缺"
+[ -x "$RH/scripts/startup-check.sh" ] && ok "startup-check.sh（会话自检）" || warn "startup-check.sh 缺"
 # 系统 crontab 登记清单：有登记则报漂移，无则跳过
 if [ -f "$HOME/.config/cron-manage.sys" ]; then
     if "$RH/scripts/cron-manage.sh" sync >/dev/null 2>&1; then ok "crontab 登记与系统一致"; else warn "crontab 有漂移 — cron-manage.sh sync 查差异"; fi
@@ -55,6 +56,11 @@ if command -v cc-connect >/dev/null 2>&1; then
 else
     ask "cc-connect 未装。选飞书/自建的写进 OPS.md 通道段"
 fi
+
+echo
+echo "── 原生配置层（install.sh 生成骨架）──"
+[ -f "$HOME/.claude/settings.json" ] && ok "settings.json（permissions/hooks 骨架）" || warn "settings.json 缺（install.sh 会生成）"
+[ -x "$HOME/.claude/hooks/block-destructive.sh" ] && ok "破坏性命令拦截钩子已装" || warn "拦截钩子未装（install.sh 会装）"
 
 echo
 echo "── 本机参数（填 OPS.md，不写死进仓库）──"

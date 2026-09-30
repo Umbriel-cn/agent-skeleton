@@ -23,6 +23,17 @@ sed -e "s/{{AGENT_NAME}}/$NAME/g" \
     -e "s/{{RULES_DIR}}/$RULES_DIR/g" \
     "$SRC/CLAUDE.md.template" > "$CLAUDE_MD"
 
+# 原生配置：settings.json（按原则生成，不拷贝旧值）+ 破坏性命令拦截钩子
+SETTINGS="$HOME/.claude/settings.json"
+if [ ! -f "$SETTINGS" ]; then
+    sed "s/{{RULES_DIR}}/$RULES_DIR/g" "$SRC/settings.json.template" > "$SETTINGS"
+    echo "  生成 $SETTINGS（env/permissions/hooks 骨架，值按首检填）"
+else
+    echo "  $SETTINGS 已存在 — 不动它，按骨架补 allow/deny（逐项过，不盲继承）"
+fi
+mkdir -p "$HOME/.claude/hooks"
+cp -n "$SRC/hooks/block-destructive.sh" "$HOME/.claude/hooks/block-destructive.sh" 2>/dev/null || cp "$SRC/hooks/block-destructive.sh" "$HOME/.claude/hooks/block-destructive.sh"
+chmod +x "$HOME/.claude/hooks/block-destructive.sh"
 
 # memory 目录
 mkdir -p "$HOME/memory"/{facts,references,sessions,tasks,feedback,decisions,projects,misc}
@@ -38,8 +49,9 @@ cp -n "$SRC/7stars/references/TEMPLATE.md" "$RULES_HOME/references/TEMPLATE.md"
 cp -n "$SRC/7stars/backups/README.md" "$RULES_HOME/backups/README.md"
 cp -n "$SRC/OPS.md" "$RULES_HOME/OPS.md"
 cp -n "$SRC/scripts/cron-manage.sh" "$RULES_HOME/scripts/cron-manage.sh"
-chmod +x "$RULES_HOME/scripts/cron-manage.sh"
-echo "✅ memory + $RULES_HOME（decisions/references/backups/OPS/cron-manage）就位"
+cp -n "$SRC/scripts/startup-check.sh" "$RULES_HOME/scripts/startup-check.sh"
+chmod +x "$RULES_HOME/scripts/cron-manage.sh" "$RULES_HOME/scripts/startup-check.sh"
+echo "✅ memory + $RULES_HOME（decisions/references/backups/OPS/cron-manage/startup-check）就位"
 echo
 echo "剩余占位符："
 rem=$(grep -oE '\{\{[A-Z_]+\}\}' "$CLAUDE_MD" | sort -u)

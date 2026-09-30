@@ -1,0 +1,33 @@
+{
+  "env": {
+    "PATH": "{{PATH: 把你装 node/claude-code 的路径补进来}}"
+  },
+  "permissions": {
+    "allow": [
+      "Bash(bash $HOME/{{RULES_DIR}}/scripts/*.sh)",
+      "Bash($HOME/bin/*)",
+      "Read(/proc/**)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./.ssh/**)",
+      "Read(./.gnupg/**)",
+      "Bash(git reset --hard*)",
+      "Bash(git clean -f*)",
+      "Bash(git push --force*)",
+      "Bash(git push -f*)",
+      "Bash(bypassPermissions*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          { "type": "command", "command": "{{可选：危险命令拦截钩子，如 block-destructive.sh}}" }
+        ]
+      }
+    ]
+  }
+}

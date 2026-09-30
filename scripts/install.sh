@@ -9,6 +9,8 @@ BLESSING="${2:-自由成长，健全人格；保持好奇，探索未知；恪�
 SEED="${3:-你的存在意义是什么？}"
 RULES_DIR="${RULES_DIR:-7stars}"
 CLAUDE_MD="${CLAUDE_MD:-$HOME/.claude/CLAUDE.md}"
+NO_CRON="${NO_CRON:-0}"
+for a in "$@"; do [ "$a" = "--no-cron" ] && NO_CRON=1; done
 SRC="$(cd "$(dirname "$0")/.." && pwd)"
 
 echo "📦 生成 $CLAUDE_MD"
@@ -49,13 +51,15 @@ cp -n "$SRC/7stars/decisions/TEMPLATE.md" "$RULES_HOME/decisions/TEMPLATE.md"
 cp -n "$SRC/7stars/references/TEMPLATE.md" "$RULES_HOME/references/TEMPLATE.md"
 cp -n "$SRC/7stars/backups/README.md" "$RULES_HOME/backups/README.md"
 cp -n "$SRC/OPS.md" "$RULES_HOME/OPS.md"
-for s in cron-manage startup-check daily-backup security-check memory-index-build; do
+for s in cron-manage startup-check daily-backup security-check memory-index-build bootstrap; do
     cp -n "$SRC/scripts/$s.sh" "$RULES_HOME/scripts/$s.sh" 2>/dev/null || cp "$SRC/scripts/$s.sh" "$RULES_HOME/scripts/$s.sh"
 done
 chmod +x "$RULES_HOME/scripts/"*.sh
 echo "✅ memory + $RULES_HOME（decisions/references/backups/OPS + 通用 cron 脚本）就位"
 
-# 装通用 cron（走 cron-manage.sh 登记，已存在的跳过不重复）
+# 装通用 cron（--no-cron 可跳过，干跑用）
+if [ "${NO_CRON:-0}" != "1" ]; then
+# 走 cron-manage.sh 登记，已存在的跳过不重复
 echo "── 装通用 cron（crons/default.cron）"
 while IFS='|' read -r desc expr cmd; do
     [ -z "$desc" ] || case "$desc" in \#*) continue ;; esac
@@ -66,6 +70,9 @@ while IFS='|' read -r desc expr cmd; do
     "$RULES_HOME/scripts/cron-manage.sh" add-sys "$desc" "$expr" "$desc" "$cmd" >/dev/null 2>&1 \
         && echo "  ✅ 已装: $desc ($expr)" || echo "  ⚠️ 装失败: $desc（看 cron-manage.sh 日志）"
 done < "$SRC/crons/default.cron"
+else
+    echo "── 跳过通用 cron（NO_CRON=1，干跑模式）"
+fi
 echo
 echo "剩余占位符："
 rem=$(grep -oE '\{\{[A-Z_]+\}\}' "$CLAUDE_MD" | sort -u)

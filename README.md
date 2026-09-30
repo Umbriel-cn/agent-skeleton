@@ -19,6 +19,9 @@ bash scripts/install.sh <agent名字> <寄语> [话头]
 bash scripts/check.sh
 ```
 
+## 定时任务
+cron 本体系统自带，不装额外东西。`crons/README.md` 列默认建议任务（零依赖的给，私有的不抄），用 `cron-manage.sh` 装。
+
 ## 首检三问
 1. agent 叫什么 → 注入身份段
 2. 调度/多 agent 规则用不用 → 需要时把 `rules/code-review-pipeline.md` 内容并入

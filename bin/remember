@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# remember — 写一条记忆到 $HOME/memory（纯 Markdown + 标签 frontmatter）
+# 用法：remember "标题" "内容" [--author "名字"] [--tags "a,b"] [--links "x,y"]
+# 目录约定：facts/ references/ sessions/ tasks/ feedback/ decisions/ projects/ misc/
+set -euo pipefail
+MEM_DIR="${MEM_DIR:-$HOME/memory}"
+
+[ $# -ge 2 ] || { echo "用法: remember \"标题\" \"内容\" [--author x] [--tags a,b] [--links x,y]"; exit 1; }
+title="$1"; content="$2"; shift 2
+author=""; tags=""; links=""; cat="misc"
+while [ $# -ge 1 ]; do
+    case "$1" in
+        --author) author="$2"; shift 2 ;;
+        --tags) tags="$2"; shift 2 ;;
+        --links) links="$2"; shift 2 ;;
+        --cat) cat="$2"; shift 2 ;;
+        *) shift ;;
+    esac
+done
+
+mkdir -p "$MEM_DIR/$cat"
+slug=$(echo "$title" | tr ' /' '--' | tr '[:upper:]' '[:lower:]' | head -c 60)
+dir=$(ls -d "$MEM_DIR"/*/ 2>/dev/null | head -1 || echo "$MEM_DIR/misc/")
+dir="${dir%/}"
+f="$dir/$slug.md"
+n=1
+while [ -e "$f" ]; do n=$((n+1)); f="$dir/$slug-$n.md"; done
+
+{
+    echo "---"
+    echo "name: $slug"
+    echo "title: \"$title\""
+    [ -n "$author" ] && echo "author: $author"
+    [ -n "$tags" ] && echo "tags: [$(echo "$tags" | sed 's/,/, /g')]"
+    [ -n "$links" ] && echo "links: [$(echo "$links" | sed 's/,/, /g')]"
+    echo "---"
+    echo
+    echo "$content"
+    [ -n "$links" ] && { echo; echo "$links" | tr ',' '\n' | sed 's/^/- \[\[/;s/$/\]\]/' ; }
+} > "$f"
+echo "✅ 已存: $f"

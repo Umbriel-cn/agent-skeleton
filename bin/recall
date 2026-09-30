@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+# recall — 纯 Markdown 记忆检索：grep 标题+正文+标签，可选 --tag / --graph
+# 用法：
+#   recall "关键词" [数量]
+#   recall "关键词" --tag "标签"
+#   recall --graph "节点名"     # 顺 [[]] 拉关联图谱（一跳）
+set -euo pipefail
+MEM_DIR="${MEM_DIR:-$HOME/memory}"
+MAX=5
+
+usage() { echo "用法: recall \"关键词\" [数量] | recall \"关键词\" --tag \"标签\" | recall --graph \"节点名\""; exit 1; }
+
+[ $# -ge 1 ] || usage
+
+if [ "${1}" = "--graph" ]; then
+    node="${2:?缺节点名}"; shift 2
+    [ -f "$MEM_DIR/MEMORY.md" ] || { echo "⚠️ $MEM_DIR/MEMORY.md 不存在，先建记忆库"; exit 1; }
+    echo "🕸 图谱: $node"
+    grep -rl "\[\[$node\]\]" "$MEM_DIR" 2>/dev/null | while read -r f; do
+        echo "  └ $(basename "$f" .md)"
+    done
+    exit 0
+fi
+
+kw="$1"; shift
+tag=""
+while [ $# -ge 1 ]; do
+    case "$1" in
+        --tag) tag="${2:?缺标签}"; shift 2 ;;
+        *) case "$1" in [0-9]*) MAX="$1"; shift ;; *) shift ;; esac ;;
+    esac
+done
+
+hits=0
+echo "🔍 检索: $kw${tag:+ $tag}"
+grep -rl -- "$kw" "$MEM_DIR" 2>/dev/null | while read -r f; do
+    [ -n "$tag" ] && ! grep -q "tags.*$tag\|$tag.*tags" "$f" 2>/dev/null && ! grep -q "\[[$tag\]\]" "$f" && continue
+    hits=$((hits+1))
+    [ "$hits" -gt "$MAX" ] && break
+    title=$(grep -m1 -oP '(?<=^title: ).*|(?<=^# ).*' "$f" 2>/dev/null | head -1 || true)
+    echo "[${hits}] ${title:=$(basename "$f" .md)}"
+    echo "    📄 $f"
+    meta=$(grep -m1 'tags' "$f" 2>/dev/null | head -1 || true)
+    [ -n "$meta" ] && echo "    🏷️ $(echo "$meta" | head -1 | cut -c1-120)"
+    snippet=$(grep -m1 -B1 -A1 "$kw" "$f" 2>/dev/null | head -3 || true)
+    [ -n "$snippet" ] && echo "    💬 $(echo "$snippet" | grep -v '^--' | head -1 | cut -c1-100)..."
+done
+echo "─── 检索完毕 ───"
